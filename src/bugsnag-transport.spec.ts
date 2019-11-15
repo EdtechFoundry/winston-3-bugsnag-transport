@@ -102,7 +102,7 @@ describe('BugsnagTransport', () => {
         });
       });
 
-      it('passes the stack of the Error given as winston "meta" in bugsnag "metaData"', () => {
+      it('passes the error object if error is not the first argument', () => {
         const bugsnagTransport = new BugsnagTransport({ bugsnag: { apiKey } });
         const logger = createLogger({}, bugsnagTransport);
 
@@ -111,11 +111,12 @@ describe('BugsnagTransport', () => {
         logger.error(customMessage, anyError);
 
         // winston concatenates the log message with any prop "message" from its "meta" object
-        const message = `${customMessage}${anyError.message}`;
+        const concatinatedMessage = `${customMessage}${anyError.message}`;
+        anyError.message = concatinatedMessage;
 
-        expect(mockedClient.notify).toHaveBeenCalledWith(message, {
+        expect(mockedClient.notify).toHaveBeenCalledWith(anyError, {
           severity: 'error',
-          metaData: { stack: anyError.stack },
+          metaData: { message: concatinatedMessage },
         });
       });
 

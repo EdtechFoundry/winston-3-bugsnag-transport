@@ -17,6 +17,7 @@ const SYM_MESSAGE = Symbol.for('message');
 type LoggingInfo = {
   level: WinstonLogLevel;
   message?: string;
+  stack?: string;
   [SYM_LEVEL]?: string;
   [SYM_SPLAT]?: unknown;
   [SYM_MESSAGE]?: unknown;
@@ -80,6 +81,15 @@ export class BugsnagTransport extends Transport {
       /* Instances of Error are the favorite food of Bugsnag client, give it "as is"
       see: https://docs.bugsnag.com/platforms/javascript/reporting-handled-errors/#sending-errors */
       this.client.notify(info, notifyOptions);
+      return next();
+    } else if (meta.stack) {
+      /* If the error is supplied in any of the other arguments */
+      const error = new Error(info.message);
+      error.stack = meta.stack;
+      notifyOptions.metaData = { message: info.message };
+      /* Instances of Error are the favorite food of Bugsnag client, give it "as is"
+        see: https://docs.bugsnag.com/platforms/javascript/reporting-handled-errors/#sending-errors */
+      this.client.notify(error, notifyOptions);
       return next();
     }
 
